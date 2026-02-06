@@ -1,7 +1,7 @@
 ---
 title: "Self-reported life satisfaction, 2011 to 2023"
 subtitle: "Replicating the Our World in Data Grapher"
-author: "YOUR NAME HERE" # Remember to add your name!
+author: "Ludovick L. Lopa"
 theme: united
 ---
 
@@ -26,7 +26,11 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
 # Load packages
 if (!require(pacman)) install.packages("pacman")
-pacman::p_load(plotly, tidyverse, reactable, here, scales)
+pacman::p_load(plotly, 
+               tidyverse, 
+               reactable, 
+               here, 
+               scales)
 ```
 
 ```{r}
@@ -44,6 +48,7 @@ The main life evaluation question asked in the poll is the Cantril Life Ladder q
 
 > “Please imagine a ladder, with steps numbered from 0 at the bottom to 10 at the top. The top of the ladder represents the best possible life for you and the bottom of the ladder represents the worst possible life for you. On which step of the ladder would you say you personally feel you stand at this time?”
 
+:::{.panel-tabset}
 
 ## 🔢 Table
 
@@ -63,7 +68,19 @@ The main life evaluation question asked in the poll is the Cantril Life Ladder q
 # 5. Also with `mutate`, you should round your numbers to appropriate decimal places.
 # 6. Then use scales::percent to format the Relative change as a percentage.
 # 7. Use the `reactable` function to create and output the table.
-"WRITE_YOUR_CODE_HERE"
+
+cantril_clean <- 
+  cantril %>% 
+  select(!Code) %>% 
+  filter(Year == 2011 |
+           Year == 2023) %>% 
+  pivot_wider(names_from = c(Year),
+              values_from = `Cantril ladder score`) %>% 
+  mutate(`Absolute change` = round((`2023`-`2011`), 2),
+         `Relative change` = percent(round((`2023`-`2011`)/`2011`, 2)))
+  
+reactable(cantril_clean)
+
 ```
 
 
@@ -95,6 +112,7 @@ cantril %>%
 
 ## 📈 Simple Chart
 
+
 ```{r}
 # In this tab, create a simple line chart of the Cantril score over time for a few countries,
 # similar to the one on the Our World in Data page.
@@ -108,10 +126,40 @@ cantril %>%
 # 5. Use labs to create neat labels for the chart
 # 6. Use theme_minimal to set the theme.
 # 7. Finally, use ggplotly to convert the ggplot chart to a plotly chart
-
-"WRITE_YOUR_CODE_HERE"
 # (When you're done with this section, don't forget to add tabsets, as mentioned in the instructions.)
+
+view(cantril)
+
+# Filter 8 African countries
+africa_scores <- cantril %>% 
+  filter(Country %in% c("Tanzania", "Kenya", "Egypt", "Libya", 
+                        "South Africa", "Ghana", "Rwanda", "Uganda"))
+#africa_scores
+
+# A plot
+
+
+line_plot <- 
+  africa_scores %>% 
+  ggplot(mapping = aes(x = Year,
+                       y = `Cantril ladder score`,
+                       colour = Country)) +
+  geom_line() +
+  scale_y_continuous(limits = c(0, 10)) +
+  scale_x_continuous(breaks = c(2011, 2014, 2017, 2020, 2023)) +
+  labs(
+    title = "Perception of happiness among African countries.",
+    subtitle = "Cantril ladder scores.",
+    y = "Cantril score") +
+  theme_minimal()
+
+#line_plot
+  
+
+ggplotly(line_plot)
+
 ```
+
 
 ## 📈 Advanced Chart
 
@@ -167,12 +215,48 @@ window.onload = filter_default;
 </script>
 
 
+## Happiest vs. Least Happy Countries
+
 ```{r}
 # OPTIONAL CHALLENGE SECTION:
 
 # Add a final tab with a single figure that shows the top 10 and bottom 10 countries by happiness score in 2023. Remember to add a ## header and include it in the tabsets
-# "WRITE_YOUR_CODE_HERE"
+
+# Identify countries with least scores:
+
+#Least happy: 
+#Afghanistan, Lebanon, Lesotho, Sierra Leone, Democratic Republic of Congo, Zimbabwe, Botswana, Malawi, Eswatini, Zambia
+
+
+#Happiest:
+#Finland, Denmark, Iceland, Sweden, Israel, Netherlands, Norway, Luxembourg, Switzerland, Australia
+
+Hap_sad_countries <- 
+  cantril %>% 
+  filter(Country %in% 
+           c("Afghanistan", "Lebanon", "Lesotho", "Sierra Leone", 
+             "Democratic Republic of Congo", "Zimbabwe", "Botswana", 
+             "Malawi", "Eswatini", "Zambia", 
+             "Finland", "Denmark", "Iceland", "Sweden", "Israel", 
+             "Netherlands", "Norway", "Luxembourg", "Switzerland", "Australia")) %>% 
+  filter(Year == 2023) %>% 
+  ggplot(aes(x = reorder(Country, `Cantril ladder score`), 
+             y = `Cantril ladder score`, 
+             fill = Country)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  scale_y_continuous(breaks = c(0,2,4,6,8,10))+
+  labs(title = "Top 10 and Bottom 10 Countries by Happiness Score (2023)",
+       caption = "World Happiness Report (2023)",
+       x = "Country",
+       y = "Happiness Score")+
+  theme_minimal()
+
+Hap_sad_countries
+
+
 ```
+:::
 
 
 # {.unlisted}
